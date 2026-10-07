@@ -1,0 +1,397 @@
+name: FARES - Production Release QA
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: fares-android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: "17"
+  GRADLE_VERSION: "8.9"
+
+jobs:
+
+  # ============================================================
+  # 1. CHECK PROJECT / GRADLE ENVIRONMENT
+  # ============================================================
+
+  project-check:
+    name: Project & Gradle Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Check Gradle Wrapper
+        shell: bash
+        run: |
+          set -e
+
+          echo "Checking Gradle Wrapper..."
+
+          if [ -f "./gradlew" ] && [ -f "./gradle/wrapper/gradle-wrapper.properties" ]; then
+            echo "Gradle Wrapper scripts found."
+
+            if [ -f "./gradle/wrapper/gradle-wrapper.jar" ]; then
+              echo "Gradle Wrapper JAR found."
+              echo "Using repository Gradle Wrapper."
+            else
+              echo "WARNING:"
+              echo "gradle-wrapper.jar is missing."
+              echo "Falling back to system Gradle."
+            fi
+
+          else
+            echo "Gradle Wrapper is not complete."
+            echo "Falling back to installed Gradle $GRADLE_VERSION."
+          fi
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Verify Gradle
+        run: |
+          gradle --version
+
+  # ============================================================
+  # 2. STATIC QUALITY
+  # ============================================================
+
+  static-quality:
+    name: Static Quality Gate
+    runs-on: ubuntu-latest
+    needs: project-check
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Kotlin source check
+        shell: bash
+        run: |
+          set -e
+
+          files=$(find . \
+            -type f \
+            -name "*.kt" \
+            ! -path "./.gradle/*" \
+            ! -path "./build/*")
+
+          if [ -z "$files" ]; then
+            echo "ERROR: No Kotlin files found."
+            exit 1
+          fi
+
+          echo "Kotlin files found."
+
+      - name: Debug output scan
+        shell: bash
+        run: |
+          set -e
+
+          if grep -RInE \
+            --include="*.kt" \
+            --include="*.java" \
+            --exclude-dir=".gradle" \
+            --exclude-dir="build" \
+            'System\.out\.println|printStackTrace\(\)' .; then
+
+            echo "ERROR: Debug output found."
+            exit 1
+          fi
+
+          echo "Debug output scan passed."
+
+      - name: Manifest validation
+        shell: bash
+        run: |
+          set -e
+
+          manifest=$(find . \
+            -path "*/src/main/AndroidManifest.xml" \
+            | head -n 1)
+
+          if [ -z "$manifest" ]; then
+            echo "ERROR: AndroidManifest.xml not found."
+            exit 1
+          fi
+
+          echo "Manifest:"
+          echo "$manifest"
+
+          if grep -q 'android:debuggable="true"' "$manifest"; then
+            echo "ERROR: Production manifest explicitly enables debugging."
+            exit 1
+          fi
+
+          echo "Manifest validation passed."
+
+  # ============================================================
+  # 3. UNIT TESTS
+  # ============================================================
+
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: static-quality
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Run Unit Tests
+        run: |
+          gradle testDebugUnitTest --stacktrace
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: FARES-unit-test-reports
+          path: |
+            **/build/reports/tests/**
+            **/build/test-results/**
+          if-no-files-found: warn
+
+  # ============================================================
+  # 4. DEBUG BUILD
+  # ============================================================
+
+  debug-build:
+    name: Debug APK
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Build Debug
+        run: |
+          gradle assembleDebug --stacktrace
+
+      - name: Verify Debug APK
+        shell: bash
+        run: |
+          set -e
+
+          apk=$(find . \
+            -type f \
+            -path "*/build/outputs/apk/debug/*.apk" \
+            | head -n 1)
+
+          if [ -z "$apk" ]; then
+            echo "ERROR: Debug APK was not generated."
+            exit 1
+          fi
+
+          echo "Debug APK:"
+          echo "$apk"
+
+          ls -lh "$apk"
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FARES-debug
+          path: |
+            **/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+  # ============================================================
+  # 5. RELEASE BUILD
+  # ============================================================
+
+  release-build:
+    name: Release APK
+    runs-on: ubuntu-latest
+    needs: unit-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Setup Gradle 8.7
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
+
+      - name: Build Release
+        run: |
+          gradle assembleRelease --stacktrace
+
+      - name: Verify Release APK
+        shell: bash
+        run: |
+          set -e
+
+          apk=$(find . \
+            -type f \
+            -path "*/build/outputs/apk/release/*.apk" \
+            | head -n 1)
+
+          if [ -z "$apk" ]; then
+            echo "ERROR: Release APK was not generated."
+            exit 1
+          fi
+
+          echo "Release APK:"
+          echo "$apk"
+
+          ls -lh "$apk"
+
+          echo "SHA256:"
+          sha256sum "$apk"
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FARES-release
+          path: |
+            **/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+  # ============================================================
+  # 6. FINAL RELEASE SANITY
+  # ============================================================
+
+  release-sanity:
+    name: Release Sanity
+    runs-on: ubuntu-latest
+    needs: release-build
+
+    steps:
+      - name: Download Release APK
+        uses: actions/download-artifact@v4
+        with:
+          name: FARES-release
+          path: release-apk
+
+      - name: Validate APK
+        shell: bash
+        run: |
+          set -e
+
+          apk=$(find release-apk -name "*.apk" | head -n 1)
+
+          if [ -z "$apk" ]; then
+            echo "ERROR: APK not found."
+            exit 1
+          fi
+
+          if [ ! -s "$apk" ]; then
+            echo "ERROR: APK is empty."
+            exit 1
+          fi
+
+          echo "APK validation passed."
+
+          echo "APK size:"
+          du -h "$apk"
+
+          echo "APK SHA256:"
+          sha256sum "$apk"
+
+  # ============================================================
+  # 7. FINAL PRODUCTION GATE
+  # ============================================================
+
+  production-gate:
+    name: FINAL PRODUCTION GATE
+    runs-on: ubuntu-latest
+
+    needs:
+      - static-quality
+      - unit-tests
+      - debug-build
+      - release-build
+      - release-sanity
+
+    steps:
+      - name: Production Gate
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "       FARES PRODUCTION QA GATE"
+          echo "=========================================="
+          echo ""
+          echo "Project Check       : PASS"
+          echo "Static Quality      : PASS"
+          echo "Unit Tests          : PASS"
+          echo "Debug Build         : PASS"
+          echo "Release Build       : PASS"
+          echo "Release Sanity      : PASS"
+          echo ""
+          echo "=========================================="
+          echo "      RELEASE BUILD READY FOR DEVICE QA"
+          echo "=========================================="
