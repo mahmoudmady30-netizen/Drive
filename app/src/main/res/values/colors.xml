@@ -1,0 +1,15 @@
+<resources>
+    <!-- Light palette (secondary). Dark palette lives in values-night and is the default driving mode. -->
+    <color name="dv_bg">#F2F4F6</color>
+    <color name="dv_surface">#FFFFFF</color>
+    <color name="dv_surface2">#EEF1F4</color>
+    <color name="dv_stroke">#DCE1E6</color>
+    <color name="dv_text">#12161A</color>
+    <color name="dv_muted">#5C6772</color>
+    <color name="dv_accent">#1F6FEB</color>
+    <color name="dv_on_accent">#FFFFFF</color>
+    <color name="dv_good">#12945A</color>
+    <color name="dv_bad">#D6403F</color>
+    <color name="dv_scrim">#F2F2F4F6</color>
+    <color name="dv_launcher_bg">#14181D</color>
+</resources>

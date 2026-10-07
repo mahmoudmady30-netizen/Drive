@@ -1,0 +1,32 @@
+<resources>
+    <string name="app_name">DriveVoice</string>
+    <string name="greeting">فارس معاك</string>
+    <string name="greeting_sub">تحب نروح فين؟</string>
+    <string name="talk_to_fares">تحدث مع فارس</string>
+    <string name="status_ready">جاهز للقيادة</string>
+    <string name="chip_fuel">بنزين</string>
+    <string name="chip_coffee">قهوة</string>
+    <string name="chip_food">أكل</string>
+    <string name="chip_parking">موقف</string>
+    <string name="chip_charging">شحن</string>
+    <string name="chip_music">الموسيقى</string>
+    <string name="stat_arrival">الوصول</string>
+    <string name="stat_remaining">المتبقي</string>
+    <string name="stat_time">الوقت</string>
+    <string name="add_stop">إضافة محطة</string>
+    <string name="cancel_trip">إلغاء الرحلة</string>
+    <string name="cancel">إلغاء</string>
+    <string name="arrived_title">وصلت لوجهتك</string>
+    <string name="new_trip">رحلة جديدة</string>
+    <string name="close">إغلاق</string>
+    <string name="voice_listening">فارس معاك</string>
+    <string name="voice_processing">ثانية واحدة…</string>
+    <string name="voice_speaking">فارس بيتكلم</string>
+    <string name="voice_error">حصلت مشكلة بسيطة</string>
+    <string name="voice_hint">قول طلبك…</string>
+    <string name="perm_title">محتاج إذنك عشان أشتغل</string>
+    <string name="perm_body">الميكروفون عشان أسمع أوامرك، والموقع عشان أعرف أنت فين وأحسب الطريق. مفيش حاجة بتتسجل.</string>
+    <string name="perm_allow">السماح</string>
+    <string name="perm_settings">فتح الإعدادات</string>
+    <string name="add_stop_title">إضافة محطة</string>
+</resources>

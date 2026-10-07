@@ -1,0 +1,32 @@
+app/src/main/java/com/drivevoice/mvp/CommandParser.kt: braces=40/40
+app/src/main/java/com/drivevoice/mvp/NavigationState.kt: braces=10/10
+app/src/main/java/com/drivevoice/mvp/Config.kt: braces=4/4
+app/src/main/java/com/drivevoice/mvp/VoiceForegroundService.kt: braces=15/15
+app/src/main/java/com/drivevoice/mvp/MainActivity.kt: braces=143/143
+app/src/main/java/com/drivevoice/mvp/MapStyle.kt: braces=11/11
+app/src/main/java/com/drivevoice/mvp/VoiceCommandEngine.kt: braces=27/27
+app/src/main/java/com/drivevoice/mvp/MapsRepository.kt: braces=31/31
+app/src/main/java/com/drivevoice/mvp/car/DriveVoiceCarService.kt: braces=1/1
+app/src/main/java/com/drivevoice/mvp/car/DriveVoiceCarSession.kt: braces=38/38
+app/src/main/res/values/strings.xml: XML=PASS
+app/src/main/res/values/colors.xml: XML=PASS
+app/src/main/res/values/themes.xml: XML=PASS
+app/src/main/res/drawable/voice_button.xml: XML=PASS
+app/src/main/res/drawable/panel_bg.xml: XML=PASS
+app/src/main/res/drawable/pill.xml: XML=PASS
+app/src/main/res/drawable/top_gradient.xml: XML=PASS
+app/src/main/res/xml/backup_rules.xml: XML=PASS
+app/src/main/res/xml/automotive_app_desc.xml: XML=PASS
+app/src/main/res/layout/activity_main.xml: XML=PASS
+MANIFEST RECORD_AUDIO: PASS
+MANIFEST FOREGROUND_SERVICE_MICROPHONE: PASS
+MANIFEST microphone service type: PASS
+MANIFEST Car navigation category: PASS
+MANIFEST Navigation templates permission: PASS
+FEATURE Wake word: PASS
+FEATURE NavigationManager: PASS
+FEATURE Trip update: PASS
+FEATURE Alternative routes: PASS
+FEATURE Multi-stop: PASS
+FEATURE Arrival target: PASS
+FEATURE Deep tests: PASS

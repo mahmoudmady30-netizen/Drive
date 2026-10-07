@@ -1,0 +1,14 @@
+<resources>
+    <color name="dv_bg">#0F1215</color>
+    <color name="dv_surface">#171B20</color>
+    <color name="dv_surface2">#1F252B</color>
+    <color name="dv_stroke">#2B333B</color>
+    <color name="dv_text">#F3F5F7</color>
+    <color name="dv_muted">#9AA5B0</color>
+    <color name="dv_accent">#5AA7FF</color>
+    <color name="dv_on_accent">#06101C</color>
+    <color name="dv_good">#3DD68C</color>
+    <color name="dv_bad">#FF6B6B</color>
+    <color name="dv_scrim">#F20F1215</color>
+    <color name="dv_launcher_bg">#14181D</color>
+</resources>
